@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createThread, generateResponse, getAssistant } from "@/lib/action";
 import { Bot, User } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
@@ -11,17 +12,28 @@ type Message = {
   content: string;
 };
 
-const mockData: Message[] = [
-  { role: "system", content: "You are a helpful assistant." },
-  { role: "user", content: "What is the capital of France?" },
-  { role: "assistant", content: "The capital of France is Paris." },
-];
-
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>(mockData);
+  
+  const [assistantId, setAssistantId] = useState<string | null>(null);
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Fetch the assistant when the component mounts
+    async function fetchAssistant() {
+      try {
+        const id = await getAssistant("agent");
+        setAssistantId(id);
+      } catch (error) {
+        console.error("Error fetching assistant:", error);
+      }
+    }
+
+    fetchAssistant();
+  }, []);
 
   useEffect(() => {
     // scroll to bottom when messages change
@@ -31,8 +43,22 @@ export default function Home() {
     }
   }, [messages]);
 
-  function handleSend() {
-    if (!input.trim()) return;
+  async function handleSend() {
+    if (!input.trim() || !assistantId) {
+      console.warn("Input is empty or assistant not ready");
+      return;
+    }
+
+    if (!threadId) {
+      const newThreadId = await createThread();
+      console.log("New thread created with ID:", newThreadId);
+      setThreadId(newThreadId);
+    }
+
+    if (!threadId) {
+      console.error("Failed to create thread");
+      return;
+    }
 
     // Add user message to the conversation
     const newMessage: Message = { role: "user", content: input };
@@ -40,15 +66,11 @@ export default function Home() {
     setInput("");
 
     setLoading(true);
-    // Simulate assistant response (replace with actual API call)
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: `You asked: "${input}". This is a mock response.`,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setLoading(false);
-    }, 1000);
+
+    const assistantResponse = await generateResponse(assistantId, threadId, input);
+    const assistantMessage: Message = { role: "assistant", content: assistantResponse };
+    setMessages((prev) => [...prev, assistantMessage]);
+    setLoading(false);
   }
 
   return (
@@ -64,13 +86,24 @@ export default function Home() {
               <p
                 className={`font-semibold flex items-center gap-1 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                {msg.role === "user" ? "You" : "Assistant"}
+                {msg.role === "user" ? "You" : "Agent"}
               </p>
               <p>{msg.content}</p>
             </div>
             {msg.role === "user" && <User className="mt-1 h-5 w-5 shrink-0" />}
           </div>
         ))}
+        { loading && (
+          <div className="mb-4 flex items-start gap-2 justify-start text-left">
+            <Bot className="mt-1 h-5 w-5 shrink-0 animate-pulse" />
+            <div>
+              <p className="font-semibold flex items-center gap-1 justify-start">
+                Agent
+              </p>
+              <p>Typing...</p>
+            </div>
+          </div>
+        )}
       </div>
       <div className="mt-auto flex flex-col gap-2 ">
         <Input

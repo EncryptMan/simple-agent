@@ -1,44 +1,40 @@
-# Deep Agents Template
+# Simple Agent Template
 
-Deployment template for a deep agent built with `create_deep_agent(...)`.
+Minimal deployment template for a LangChain agent built with `create_agent(...)`.
 
 ## What this template gives you
 
-- A deployable deep agent graph at `src/deep_agent/graph.py`.
-- Explicit workflow prompt (plan, delegate, critique, finalize).
-- Two predefined sub-agents (`researcher`, `critic`).
-- Human-in-the-loop interrupts on `execute` and `write_file`.
+- A deployable LangGraph entrypoint at `src/simple_agent/graph.py`.
+- Two small tools (`utc_now`, `calculator`) for predictable local behavior.
+- `langgraph.json` configured for LangSmith/LangGraph deployment.
 - A `uv`-managed local workflow with a small `Makefile` wrapper and starter tests.
-
-## Prerequisites
-
-- An API key for your model provider (Anthropic by default)
-- A [LangSmith](https://smith.langchain.com/) account (Plus plan or higher) to deploy
 
 ## Quickstart
 
-1. Sync the project and configure environment:
+1. Sync the project with `uv`:
 
 ```bash
-uv sync
+uv sync --dev
+```
+
+2. Configure environment:
+
+```bash
 cp .env.example .env
 ```
 
-2. Start the dev server:
+3. Run locally:
 
 ```bash
 uv run langgraph dev
 ```
 
-3. Deploy to LangSmith:
+Optional `make` wrappers:
 
 ```bash
-uv run langgraph deploy
+make dev
+make run
 ```
-
-See the [CLI docs](https://docs.langchain.com/langsmith/cli#deploy) for deploy options.
-
-To set up CI instead, push this repo to GitHub and configure your deployment through the LangSmith UI.
 
 ## Tests and lint
 
@@ -51,8 +47,14 @@ make format
 
 Integration tests are skipped unless `ANTHROPIC_API_KEY` is set.
 
+## Deploy to LangSmith
+
+1. Push this template to a Git repository.
+2. In LangSmith, create a new Deployment from that repo.
+3. Set required environment variables (`ANTHROPIC_API_KEY`, optionally `LANGSMITH_API_KEY`).
+4. Deploy using `langgraph.json` defaults.
+
 ## Reference docs
 
-- Deep Agents overview: https://docs.langchain.com/oss/python/deepagents/overview
-- Deep Agents quickstart: https://docs.langchain.com/oss/python/deepagents/quickstart
-- LangSmith CLI: https://docs.langchain.com/langsmith/cli
+- LangChain quickstart: https://docs.langchain.com/oss/python/langchain/quickstart
+- LangChain deployment: https://docs.langchain.com/oss/python/langchain/deploy
