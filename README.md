@@ -2,6 +2,8 @@
 
 A minimal example project containing a simple Langgraph agent implementation and a Next.js web frontend.
 
+![Homepage Screenshot](web/public/screenshots/homepage.png)
+
 ## Overview
 
 This repository demonstrates a simple agent architecture (in the `agent/` folder) alongside a web UI (in the `web/` folder). It includes tests for the Python agent and basic components for the frontend.
