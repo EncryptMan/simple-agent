@@ -1,4 +1,4 @@
-# Deep Agent
+# Simple Agent
 
 A minimal example project containing a simple Langgraph agent implementation and a Next.js web frontend.
 
