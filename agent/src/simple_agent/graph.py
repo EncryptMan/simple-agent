@@ -6,11 +6,13 @@ import ast
 import os
 from datetime import datetime, timezone
 from typing import Any
+import requests
 
 from langchain.agents import create_agent
 from langchain_core.tools import tool
 
-DEFAULT_MODEL = os.getenv("SIMPLE_AGENT_MODEL", "anthropic:claude-sonnet-4-6")
+DEFAULT_MODEL = os.getenv("SIMPLE_AGENT_MODEL", "openai:gpt-5.4-mini")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 
 
 @tool
@@ -50,9 +52,33 @@ def calculator(expression: str) -> str:
     return str(result)
 
 
+@tool
+def web_search(query: str) -> str:
+    """Perform a web search using Tavily API and return the top result snippet."""
+    if not TAVILY_API_KEY:
+        raise ValueError("Tavily API key is not set")
+
+    response = requests.post(
+        "https://api.tavily.com/search",
+        headers={"Authorization": f"Bearer {TAVILY_API_KEY}"},
+        json={"query": query}
+    )
+    response.raise_for_status()
+    data = response.json()
+
+    result = ''
+
+    for item in data.get("results", []):
+        result += f"Title: {item.get('title', 'No title')}\n"
+        result += f"URL: {item.get('url', 'No URL')}\n"
+        result += f"Content: {item.get('content', 'No content')}\n\n"
+        
+    return result
+
+
 graph = create_agent(
     model=DEFAULT_MODEL,
-    tools=[utc_now, calculator],
+    tools=[utc_now, calculator, web_search],
     system_prompt=(
         "You are a concise assistant. "
         "Use tools when they add factual precision, then return a direct answer."
